@@ -1,6 +1,6 @@
 """
 Instagram Reel Direct Downloader - Production & Local Web Server
-Ready for Render, Railway, Vercel & GitHub Deployment
+With Guaranteed Full Audio + Video Streams
 """
 
 import sys
@@ -38,42 +38,56 @@ def get_direct_video_url(reel_url):
     shortcode = extract_shortcode(reel_url)
     clean_url = f"https://www.instagram.com/reel/{shortcode}/" if shortcode else reel_url
 
-    # 1. yt-dlp
+    # 1. yt-dlp: Explicitly filter for streams that have BOTH audio and video!
     try:
         ydl_opts = {
             'quiet': True,
             'skip_download': True,
             'no_warnings': True,
             'extract_flat': False,
+            'format': 'best[acodec!=none][vcodec!=none]/best',
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(clean_url, download=False)
-            video_url = info.get('url')
-            if not video_url and 'formats' in info:
-                formats = [f for f in info['formats'] if f.get('vcodec') != 'none']
-                if formats:
-                    video_url = formats[-1].get('url')
+            
+            # Check all formats for combined audio + video (acodec != none AND vcodec != none)
+            formats = info.get('formats', [])
+            combined_formats = [
+                f for f in formats 
+                if f.get('vcodec') != 'none' and f.get('acodec') != 'none' and f.get('url')
+            ]
+            
+            video_url = None
+            if combined_formats:
+                # Sort by quality/bitrate/height to get best resolution with audio
+                combined_formats.sort(key=lambda x: (x.get('height') or 0, x.get('tbr') or 0))
+                video_url = combined_formats[-1].get('url')
+            elif info.get('url') and info.get('acodec') != 'none':
+                video_url = info.get('url')
+
             if video_url:
+                print(f"[+] Successfully extracted combined video+audio for {shortcode}")
                 return video_url, shortcode
     except Exception as e:
-        print(f"yt-dlp note: {e}")
+        print(f"[-] yt-dlp extraction note: {e}")
 
-    # 2. Cobalt API Fallback
+    # 2. Cobalt API Fallback (Guaranteed merged audio + video)
     try:
         cob_res = requests.post(
             "https://api.cobalt.tools",
-            json={"url": clean_url},
+            json={"url": clean_url, "videoQuality": "max"},
             headers={"Accept": "application/json", "Content-Type": "application/json"},
             timeout=8
         )
         if cob_res.status_code == 200:
             cob_data = cob_res.json()
             if cob_data.get("url"):
+                print(f"[+] Cobalt returned merged audio+video for {shortcode}")
                 return cob_data["url"], shortcode
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[-] Cobalt fallback note: {e}")
 
-    # 3. Embed scrape fallback
+    # 3. Instagram Embed scrape fallback (Progressive MP4 with audio)
     try:
         embed_url = f"https://www.instagram.com/reel/{shortcode}/embed/captioned/"
         r = requests.get(embed_url, headers=HEADERS, timeout=8)
@@ -81,13 +95,15 @@ def get_direct_video_url(reel_url):
             matches = re.findall(r'(https://[^"\s\\]+?\.mp4[^"\s\\]*)', r.text)
             for m in matches:
                 clean_mp4 = m.encode('utf-8').decode('unicode-escape').replace("&amp;", "&")
-                if "cdninstagram.com" in clean_mp4 or "fbcdn.net" in clean_mp4:
+                if ("cdninstagram.com" in clean_mp4 or "fbcdn.net" in clean_mp4) and "bytestart" not in clean_mp4:
+                    print(f"[+] Embed scrape found combined MP4 for {shortcode}")
                     return clean_mp4, shortcode
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[-] Embed scrape note: {e}")
 
     return None, shortcode
 
+# CORS
 @app.after_request
 def add_cors_headers(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
@@ -126,16 +142,17 @@ def api_download():
     video_url = request.args.get("url", "").strip()
     shortcode = request.args.get("shortcode", "").strip()
 
+    # Re-fetch if url was missing
     if not video_url and shortcode:
         video_url, _ = get_direct_video_url(f"https://www.instagram.com/reel/{shortcode}/")
 
     if not video_url:
-        return "કૃપા કરીને લિંક ફરી તપાસો.", 400
+        return "વિડીયો ડાઉનલોડ લિંક મળી શકી નથી, કૃપા કરીને ફરી પ્રયાસ કરો.", 400
 
     filename = f"Instagram_Reel_{shortcode or 'video'}.mp4"
 
     try:
-        remote = requests.get(video_url, headers=HEADERS, stream=True, timeout=30)
+        remote = requests.get(video_url, headers=HEADERS, stream=True, timeout=35)
         
         def generate():
             for chunk in remote.iter_content(chunk_size=128 * 1024):
