@@ -3,7 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Direct Instagram Reels Downloader</title>
+  
+  <!-- Primary SEO Meta Tags -->
+  <title>Instagram Reels Downloader - 100% Free & Direct MP4 with Audio</title>
+  <meta name="description" content="Download Instagram Reels and Videos online in high quality MP4 with audio directly to your device. Fast, free, and no third-party redirects!">
+  <meta name="keywords" content="Instagram Reel Downloader, Download Instagram Reels, Insta Video Download, Save Instagram Reels, MP4 Downloader">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://insta-reel-downloader-4int.onrender.com/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://insta-reel-downloader-4int.onrender.com/">
+  <meta property="og:title" content="Instagram Reels Downloader - Direct MP4 with Audio">
+  <meta property="og:description" content="Download Instagram Reels and Videos online in HD with full sound. Free and instant!">
+  <meta property="og:image" content="https://insta-reel-downloader-4int.onrender.com/preview.png">
+
+  <!-- Google Site Verification (Paste Google verification meta tag here if needed) -->
+  <!-- <meta name="google-site-verification" content="PASTE_YOUR_CODE_HERE" /> -->
+   <meta name="google-site-verification" content="FOOkTgRFOGXI8oEzZ2joeEtFcMZ3Os47FY68FYMbPpc" />
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -211,11 +229,10 @@
 
       if (directMp4Url) {
         mainVideoPlayer.src = directMp4Url;
-        mainVideoPlayer.muted = false; // Ensure sound is unmuted
+        mainVideoPlayer.muted = false;
         mainVideoPlayer.classList.remove('hidden');
         embedFrame.classList.add('hidden');
         mainVideoPlayer.play().catch(() => {
-          // If browser restricts unmuted autoplay, mute once and let user unmute
           mainVideoPlayer.muted = true;
           mainVideoPlayer.play().catch(() => {});
         });
