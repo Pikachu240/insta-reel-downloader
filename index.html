@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Direct Instagram Reels Downloader</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .gradient-bg {
+      background: linear-gradient(135deg, #405DE6 0%, #5851DB 25%, #833AB4 50%, #C13584 75%, #E1306C 100%);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-start p-4 sm:p-6 font-sans">
+
+  <!-- Container -->
+  <div class="w-full max-w-lg mx-auto flex flex-col items-center">
+    
+    <!-- Title -->
+    <div class="text-center my-5 space-y-2">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-bg shadow-xl shadow-pink-500/25 mb-1">
+        <i class="fa-brands fa-instagram text-3xl text-white"></i>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-rose-400 to-amber-300">
+        Direct Reel Downloader
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-400">
+        100% ડાયરેક્ટ ડાઉનલોડ — <b>કોઈ બીજી વેબસાઇટ નહીં!</b>
+      </p>
+    </div>
+
+    <!-- URL Input Card (Blank Textbox) -->
+    <div class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-3">
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <i class="fa-solid fa-link"></i>
+        </div>
+        <!-- Always completely blank on open -->
+        <input 
+          id="reelUrlInput" 
+          type="url" 
+          value=""
+          placeholder="અહીં Instagram Reel ની લિંક પેસ્ટ કરો..." 
+          class="w-full pl-10 pr-20 py-3 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition"
+        />
+        <button 
+          id="pasteBtn"
+          type="button"
+          class="absolute inset-y-1.5 right-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded-lg text-slate-300 transition flex items-center gap-1">
+          <i class="fa-regular fa-clipboard"></i> Paste
+        </button>
+      </div>
+
+      <button 
+        id="fetchBtn" 
+        class="w-full py-3.5 rounded-xl font-bold text-sm text-white gradient-bg shadow-lg shadow-pink-600/25 hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center gap-2">
+        <i class="fa-solid fa-play"></i> વિડીયો બતાવો (Show Video)
+      </button>
+
+      <div class="flex items-center justify-between text-xs text-slate-500 pt-1">
+        <span>✅ સીધો જ .MP4 વિડીયો સેવ થશે</span>
+        <button id="clearBtn" class="text-pink-400 hover:underline">ક્લિયર</button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingBox" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl mt-5 hidden flex-col items-center justify-center space-y-3">
+      <div class="w-10 h-10 border-4 border-pink-500/20 border-t-pink-500 rounded-full animate-spin"></div>
+      <p id="loadingStatus" class="text-xs sm:text-sm text-slate-300 font-medium">ઇન્સ્ટાગ્રામ પરથી વિડીયો ફેચ કરી રહ્યા છીએ...</p>
+    </div>
+
+    <!-- Video Preview & Direct Download Box -->
+    <div id="videoResultBox" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl mt-5 space-y-4 hidden">
+      
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <h3 class="font-bold text-xs sm:text-sm text-emerald-400 flex items-center gap-2">
+          <i class="fa-solid fa-circle-check"></i> વિડીયો તૈયાર છે! (Ready)
+        </h3>
+        <span id="shortcodeBadge" class="text-[11px] font-mono px-2 py-0.5 bg-slate-800 rounded text-slate-400"></span>
+      </div>
+
+      <!-- Video Display Container -->
+      <div class="w-full bg-black rounded-xl overflow-hidden border border-slate-800 flex justify-center min-h-[460px]">
+        <!-- Native HTML5 Video Player -->
+        <video 
+          id="mainVideoPlayer" 
+          controls 
+          autoplay 
+          loop 
+          playsinline 
+          class="w-full max-h-[480px] object-contain rounded-xl bg-black hidden">
+        </video>
+        
+        <!-- Instagram Embed Frame -->
+        <iframe 
+          id="embedFrame" 
+          class="w-full max-w-[420px] h-[500px] rounded-xl border-0" 
+          src="" 
+          allowfullscreen 
+          scrolling="no">
+        </iframe>
+      </div>
+
+      <!-- DIRECT DOWNLOAD BUTTON (NO REDIRECTS!) -->
+      <div class="space-y-2 pt-2">
+        <button 
+          id="directDownloadBtn" 
+          class="w-full py-4 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold text-sm sm:text-base rounded-xl shadow-xl shadow-emerald-900/30 transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-download text-lg"></i> ડાયરેક્ટ વિડીયો ડાઉનલોડ કરો (Save MP4)
+        </button>
+
+        <p id="downloadProgress" class="text-xs text-center text-emerald-400 hidden animate-pulse font-medium">
+          ⏳ વિડીયો ડાઉનલોડ શરૂ થઈ ગયું છે... કૃપા કરીને થોડી સેકન્ડ રાહ જુઓ!
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const reelUrlInput = document.getElementById('reelUrlInput');
+    const pasteBtn = document.getElementById('pasteBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const fetchBtn = document.getElementById('fetchBtn');
+    const loadingBox = document.getElementById('loadingBox');
+    const loadingStatus = document.getElementById('loadingStatus');
+    const videoResultBox = document.getElementById('videoResultBox');
+    const mainVideoPlayer = document.getElementById('mainVideoPlayer');
+    const embedFrame = document.getElementById('embedFrame');
+    const shortcodeBadge = document.getElementById('shortcodeBadge');
+    const directDownloadBtn = document.getElementById('directDownloadBtn');
+    const downloadProgress = document.getElementById('downloadProgress');
+
+    let currentShortcode = "";
+    let currentCleanUrl = "";
+    let directMp4Url = "";
+
+    const BACKEND_URL = window.location.origin.includes('http') && !window.location.origin.includes('file')
+      ? window.location.origin
+      : 'http://127.0.0.1:5000';
+
+    function extractShortcode(url) {
+      if (!url) return null;
+      const clean = url.split('?')[0].trim();
+      const match = clean.match(/(?:reel|reels|p)\/([A-Za-z0-9_-]+)/);
+      return match ? match[1] : null;
+    }
+
+    pasteBtn.addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        reelUrlInput.value = text.trim();
+        startFetch();
+      } catch (err) {
+        reelUrlInput.focus();
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      reelUrlInput.value = "";
+      videoResultBox.classList.add('hidden');
+      reelUrlInput.focus();
+    });
+
+    fetchBtn.addEventListener('click', startFetch);
+    reelUrlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') startFetch();
+    });
+
+    async function startFetch() {
+      const rawUrl = reelUrlInput.value.trim();
+      if (!rawUrl) {
+        alert("કૃપા કરીને પહેલા Instagram Reel ની લિંક પેસ્ટ કરો!");
+        return;
+      }
+
+      const shortcode = extractShortcode(rawUrl);
+      if (!shortcode) {
+        alert("માન્ય Instagram Reel લિંક દાખલ કરો!");
+        return;
+      }
+
+      currentShortcode = shortcode;
+      currentCleanUrl = `https://www.instagram.com/reel/${shortcode}/`;
+      shortcodeBadge.textContent = `ID: ${shortcode}`;
+
+      directMp4Url = "";
+      videoResultBox.classList.add('hidden');
+      loadingBox.classList.remove('hidden');
+      loadingBox.classList.add('flex');
+      loadingStatus.textContent = "ઇન્સ્ટાગ્રામ પરથી વિડીયો શોધી રહ્યા છીએ...";
+
+      try {
+        const resp = await fetch(`${BACKEND_URL}/api/get_video`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: currentCleanUrl })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.video_url) {
+            directMp4Url = data.video_url;
+          }
+        }
+      } catch (e) {
+        console.log("Backend error:", e);
+      }
+
+      loadingBox.classList.add('hidden');
+      loadingBox.classList.remove('flex');
+      videoResultBox.classList.remove('hidden');
+
+      if (directMp4Url) {
+        mainVideoPlayer.src = directMp4Url;
+        mainVideoPlayer.classList.remove('hidden');
+        embedFrame.classList.add('hidden');
+        mainVideoPlayer.play().catch(() => {});
+      } else {
+        mainVideoPlayer.classList.add('hidden');
+        embedFrame.classList.remove('hidden');
+        embedFrame.src = `https://www.instagram.com/reel/${shortcode}/embed/captioned/`;
+      }
+
+      videoResultBox.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 100% DIRECT DOWNLOAD BUTTON (NO REDIRECTS, NO NEW TABS!)
+    directDownloadBtn.addEventListener('click', () => {
+      downloadProgress.classList.remove('hidden');
+      downloadProgress.textContent = "⏳ વિડીયો ડાઉનલોડ શરૂ થઈ ગયું છે... ફાઇલ સેવ થઈ રહી છે!";
+
+      // Point directly to backend stream with Content-Disposition
+      const downloadEndpoint = `${BACKEND_URL}/api/download?shortcode=${encodeURIComponent(currentShortcode)}&url=${encodeURIComponent(directMp4Url || '')}`;
+
+      const link = document.createElement('a');
+      link.href = downloadEndpoint;
+      link.download = `Instagram_Reel_${currentShortcode}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => {
+        downloadProgress.textContent = "✅ ડાઉનલોડ પૂર્ણ! (ચેક કરો Downloads ફોલ્ડર)";
+      }, 3500);
+
+      setTimeout(() => {
+        downloadProgress.classList.add('hidden');
+      }, 7000);
+    });
+  </script>
+</body>
+</html>
